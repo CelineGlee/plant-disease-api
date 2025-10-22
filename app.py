@@ -21,6 +21,13 @@ app.add_middleware(
 
 # Load model when service starts
 model_path = os.path.join(os.path.dirname(__file__), "plant_disease_model.h5")
+
+try:
+    model = tf.keras.models.load_model(model_path)
+    print(" Model loaded successfully !")
+except Exception as e:
+    print(" Failed to load model:", e)
+
 class_names = ['Healthy', 'Powdery', 'Rust']
 batch_size = 64
 img_size = (150, 150)
