@@ -22,11 +22,13 @@ app.add_middleware(
 # Load model when service starts
 model_path = os.path.join(os.path.dirname(__file__), "plant_disease_model.h5")
 
-try:
-    model = tf.keras.models.load_model(model_path)
-    print(" Model loaded successfully !")
-except Exception as e:
-    print(" Failed to load model:", e)
+model = None
+
+def get_model():
+    global model
+    if model is None:
+        model = tf.keras.models.load_model(model_path)
+    return model
 
 class_names = ['Healthy', 'Powdery', 'Rust']
 batch_size = 64
@@ -111,7 +113,7 @@ def predict_single_image(file_bytes):
         img_array = load_and_preprocess_image(temp_path, img_size=img_size, remove_bg=True)
 
         # Predict
-        predictions = model.predict(img_array, verbose=0)
+        predictions = get_model().predict(img_array, verbose=0)
     
         # Apply softmax to convert logits to probabilities
         predicted_class = tf.argmax(predictions[0])
