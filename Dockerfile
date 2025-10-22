@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code and model
 COPY app.py .
-COPY plant_disease_model.h5 .
+# COPY plant_disease_model.h5 .
 COPY plant_disease_model.tflite .
 
 # Expose port
