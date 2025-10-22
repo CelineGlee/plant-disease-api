@@ -121,7 +121,7 @@ def predict_single_image(file_bytes):
         interpreter.invoke()
 
         # Predict
-        predictions = interpreter.get_tensor(output_details[0]['index'])[0]
+        predictions = interpreter.get_tensor(output_details[0]['index'])
         predicted_class = np.argmax(predictions)
 
         return {"predicted_class": class_names[predicted_class]}
