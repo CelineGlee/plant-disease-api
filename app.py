@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+import tflite_runtime.interpreter as tflite
 import tensorflow as tf
 from PIL import Image
 import numpy as np
@@ -19,16 +20,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load model when service starts
-model_path = os.path.join(os.path.dirname(__file__), "plant_disease_model.h5")
+model_path = os.path.join(os.path.dirname(__file__), "plant_disease_model.tflite")
 
-model = None
+# Load TFLite model
+interpreter = tflite.Interpreter(model_path=model_path)
+interpreter.allocate_tensors()
 
-def get_model():
-    global model
-    if model is None:
-        model = tf.keras.models.load_model(model_path)
-    return model
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
 
 class_names = ['Healthy', 'Powdery', 'Rust']
 batch_size = 64
@@ -112,14 +111,20 @@ def predict_single_image(file_bytes):
         # Preprocess
         img_array = load_and_preprocess_image(temp_path, img_size=img_size, remove_bg=True)
 
-        # Predict
-        predictions = get_model().predict(img_array, verbose=0)
-    
-        # Apply softmax to convert logits to probabilities
-        predicted_class = tf.argmax(predictions[0])
-        confidence = predictions[0][predicted_class] * 100
+        # Ensure float32 if model expects it
+        img_array = img_array.astype(np.float32)
 
-        return {"predicted_class": class_names[predicted_class]}
+        # Set input tensor
+        interpreter.set_tensor(input_details[0]['index'], img_array)
+
+        # Run inference
+        interpreter.invoke()
+
+        # Predict
+        output_data = interpreter.get_tensor(output_details[0]['index'])
+        predicted_class_index = int(np.argmax(output_data[0]))
+
+        return {"predicted_class": class_names[predicted_class_index]}
     finally:
         # Clean up temp file
         if os.path.exists(temp_path):
