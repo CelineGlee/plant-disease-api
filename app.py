@@ -116,6 +116,11 @@ def predict_single_image(file_bytes):
         if os.path.exists(temp_path):
             os.remove(temp_path)
 
+@app.get("/")
+async def root():
+    return {"message": "Plant Disease Detection API is running!", "status": "healthy"}
+
+
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     try:
