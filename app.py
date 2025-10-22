@@ -1,7 +1,6 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import tflite_runtime.interpreter as tflite
 import tensorflow as tf
 from PIL import Image
 import numpy as np
@@ -23,7 +22,7 @@ app.add_middleware(
 model_path = os.path.join(os.path.dirname(__file__), "plant_disease_model.tflite")
 
 # Load TFLite model
-interpreter = tflite.Interpreter(model_path=model_path)
+interpreter = tf.lite.Interpreter(model_path=model_path)
 interpreter.allocate_tensors()
 
 input_details = interpreter.get_input_details()
@@ -121,10 +120,10 @@ def predict_single_image(file_bytes):
         interpreter.invoke()
 
         # Predict
-        output_data = interpreter.get_tensor(output_details[0]['index'])
-        predicted_class_index = int(np.argmax(output_data[0]))
+        predictions = interpreter.get_tensor(output_details[0]['index'])[0]
+        predicted_class = np.argmax(predictions)
 
-        return {"predicted_class": class_names[predicted_class_index]}
+        return {"predicted_class": class_names[predicted_class]}
     finally:
         # Clean up temp file
         if os.path.exists(temp_path):
