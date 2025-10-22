@@ -41,7 +41,8 @@ def refine_mask_with_grabcut(img_rgb, mask):
     grabcut_mask = np.where(mask == 0, 0, 3).astype('uint8')
 
     cv2.grabCut(img_rgb, grabcut_mask, None, bg_model, fg_model, 5, cv2.GC_INIT_WITH_MASK)
-    final_mask = np.where((grabcut_mask == 2) | (grabcut_mask == 0), 0, 1).astype('uint8')
+    final_mask = np.where((grabcut_mask == 2) | (grabcut_mask == 0), 0, 1)
+    final_mask = final_mask.astype('uint8') if isinstance(final_mask, np.ndarray) else tf.cast(final_mask, tf.uint8).numpy()
     return final_mask * 255
 
 def remove_plant_background(image_path, show_steps=True):
