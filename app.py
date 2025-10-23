@@ -96,7 +96,6 @@ async def predict(file: UploadFile = File(...)):
 
         return JSONResponse(content={
             "predicted_class": class_names[predicted_class],
-            "confidence": f"{confidence:.2f}%"
         })
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
